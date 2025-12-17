@@ -1,12 +1,15 @@
 #include "ParkingLotManagerInMemImpl.hpp"
+#include "../strategies/HourlyPricingStrategy.hpp"
 #include <random>
 #include <sstream>
 #include <algorithm>
 #include <unordered_map>
+#include <iostream>
 
 ParkingLotManagerInMemImpl::ParkingLotManagerInMemImpl() {
     // Initialize empty maps
-
+    // Default strategy: 10 units per hour
+    this->pricingStrategy = new HourlyPricingStrategy(10.0);
 }
 
 string ParkingLotManagerInMemImpl::generateTicketId() {
@@ -123,17 +126,35 @@ ParkingTicket* ParkingLotManagerInMemImpl::parkVehicle(const Vehicle &vehicle, c
     bestspot->parkVehicle(vehicle.getLicensePlate());
     vehicleParked[vehicle.getLicensePlate()] = bestspot->getSpotId();
 
-    // add in spot (that it is now booked)
-    return new ParkingTicket(ticketId, vehicle.getLicensePlate(), bestspot->getSpotId(), entryTime);
+    // Create and store the ticket
+    ParkingTicket* ticket = new ParkingTicket(ticketId, vehicle.getLicensePlate(), bestspot->getSpotId(), entryTime);
+    activeTickets[vehicle.getLicensePlate()] = ticket;
+
+    return ticket;
 }
 
 bool ParkingLotManagerInMemImpl::exitVehicle(const string &licensePlate, const long exitTime) {
     auto it = vehicleParked.find(licensePlate);
     if(it == vehicleParked.end()) return false;
-    string spot = vehicleParked[licensePlate];
+    string spotId = vehicleParked[licensePlate];
+    
+    // Calculate Price
+    double price = 0.0;
+    if (activeTickets.find(licensePlate) != activeTickets.end()) {
+        ParkingTicket* ticket = activeTickets[licensePlate];
+        ticket->setExitTime(exitTime);
+        price = pricingStrategy->calculatePrice(*ticket);
+        
+        cout << "Vehicle " << licensePlate << " exiting. Duration: " << ticket->getDurationInMinutes() << " mins. Price: " << price << endl;
+             
+        // Clean up ticket memory
+        delete ticket;
+        activeTickets.erase(licensePlate);
+    }
+
     // free the spot
-    if(parkingSpot.find(spot) != parkingSpot.end()){
-        parkingSpot[spot].removeVehicle();
+    if(parkingSpot.find(spotId) != parkingSpot.end()){
+        parkingSpot[spotId].removeVehicle();
     }
     vehicleParked.erase(it);
     return true; 

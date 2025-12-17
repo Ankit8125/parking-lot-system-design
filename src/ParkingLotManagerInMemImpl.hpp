@@ -1,7 +1,9 @@
 #ifndef __PARKINGLOTMANAGERINMEMIMPL__
 #define __PARKINGLOTMANAGERINMEMIMPL__
 #include "ParkingLotManager.hpp"
+#include "include/strategies/PricingStrategy.hpp"
 #include <vector>
+#include <unordered_map>
 
 using namespace std;
 
@@ -9,7 +11,9 @@ class ParkingLotManagerInMemImpl : public ParkingLotManager {
 private:
     unordered_map<string, ParkingSpot> parkingSpot; // Storing parking spots. (SpotId -> SpotObject)
     unordered_map<string, string> vehicleParked; // Find where the vehicle is parked (LicensePlate -> SpotId)
-    unordered_map<string, ParkingTicket> vehicleTicket;
+    unordered_map<string, ParkingTicket*> activeTickets; // Storing active tickets (LicensePlate -> TicketObject)
+    PricingStrategy* pricingStrategy;
+
     /**
      * Generate a unique ticket ID for parking tickets.
      * @return A unique ticket identifier

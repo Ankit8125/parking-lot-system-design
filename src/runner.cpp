@@ -29,5 +29,16 @@ int main() {
                   << " in spot " << ticket->getSpotId() << endl;
     }
 
+    // Simulate exit after 2 hours (120 minutes)
+    // Entry was 1000, so Exit is 1000 + (120 * 60) if time is seconds? 
+    // The problem doesn't specify units, but getDurationInMinutes implies we need to be consistent.
+    // Let's assume timestamps are in minutes for simplicity or seconds.
+    // If getDurationInMinutes does (exit - entry), then units matter.
+    // Let's assume the inputs are in minutes for this demo.
+    long exitTime = entryTime + 125; // 2 hours 5 minutes later
+    if (manager.exitVehicle(vehicle.getLicensePlate(), exitTime)) {
+        cout << "Successfully processed exit for vehicle " << vehicle.getLicensePlate() << endl;
+    }
+
     return 0;
 }
